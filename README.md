@@ -13,9 +13,9 @@ spectrometers. Measurement data is saved into `.pdz` files.
 Unfortunately these files use a proprietary non standard binary file
 format. Even worse, over time the `.pdz` file format has changed several
 times. This situation restricts access to the data to a limited number
-of researchers who can run Bruker software. Furthermore, it is likely
-that we will loose the ability to read the data at some point in the
-future.
+of researchers who can run the required Bruker software. Furthermore, it
+is likely that we will loose the ability to read the data at some point
+in the future.
 
 In order to make optimal use of the XRF spectral data files in
 collaborative research projects now and to make sure that we can still
