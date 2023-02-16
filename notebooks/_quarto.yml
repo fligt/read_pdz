@@ -1,0 +1,25 @@
+project:
+  type: website
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+website:
+  page-navigation: true
+  twitter-card: false
+  open-graph: true
+  repo-actions: [issue]
+  navbar:
+    background: primary
+    search: true
+    right: 
+      - icon: github
+        href: "https://github.com/fligt/read_pdz"
+  sidebar:
+    style: floating
+  page-footer: "2023 Rijkserfgoedlaboratorium Amsterdam"
+
+metadata-files: [nbdev.yml, sidebar.yml]

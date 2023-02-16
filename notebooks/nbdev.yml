@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "read_pdz"
+  site-url: "https://fligt.github.io/read_pdz"
+  description: "Convert  Bruker XRF spectral data .pdz files into an open file format"
+  repo-branch: master
+  repo-url: "https://github.com/fligt/read_pdz"
