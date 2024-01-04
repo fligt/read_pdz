@@ -12,6 +12,7 @@ d = { 'settings': { 'branch': 'master',
                                  'read_pdz.reader.multiparse': ('parsing-bytes.html#multiparse', 'read_pdz/reader.py'),
                                  'read_pdz.reader.parse': ('parsing-bytes.html#parse', 'read_pdz/reader.py'),
                                  'read_pdz.reader.prefix': ('parsing-bytes.html#prefix', 'read_pdz/reader.py'),
+                                 'read_pdz.reader.read_counts': ('parsing-bytes.html#read_counts', 'read_pdz/reader.py'),
                                  'read_pdz.reader.read_strings': ('parsing-bytes.html#read_strings', 'read_pdz/reader.py'),
                                  'read_pdz.reader.read_table': ('parsing-bytes.html#read_table', 'read_pdz/reader.py'),
                                  'read_pdz.reader.skip_bytes': ('parsing-bytes.html#skip_bytes', 'read_pdz/reader.py')}}}
