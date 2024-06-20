@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['PDZ_25_STRUCTURE_DICT', 'extract_spectra', 'multiparse', 'prefix', 'file_to_bytes', 'parse', 'read_strings',
-           'skip_bytes', 'read_table', 'read_counts', 'get_block_at', 'get_blocks']
+           'skip_bytes', 'read_table', 'read_counts', 'get_block_at', 'get_blocks', 'get_blocktypes']
 
 # %% ../notebooks/20_parsing-bytes.ipynb 46
 import struct 
@@ -292,4 +292,16 @@ def get_blocks(pdz_bytes, verbose=True):
             print(f'Stop index: {start} does not match total file size: {total_size}')
         
     return block_list
-       
+
+
+def get_blocktypes(block_list): 
+    '''Extract `block_types` list from `block_list`. '''
+    
+    block_types = []
+
+    for block_dict in block_list: 
+        t = block_dict['block_type']
+        block_types.append(t)
+
+    return block_types
+
