@@ -24,4 +24,7 @@ the file format, and 2) develop open software tools available to all
 researchers for reading and converting these data files.
 
 To support open heritage science `read_pdz` package is currently being
-developed under the MIT open source software license.
+developed under the MIT open source software license. If you want to try
+yourselves you can install the latest version from
+[pypi.org](https://pypi.org/project/read-pdz/) and study the
+documentation [here](https://fligt.github.io/read_pdz/).
