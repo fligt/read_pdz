@@ -3,11 +3,11 @@
 # %% auto 0
 __all__ = ['PDZ11_STRUCT_DICT', 'check_pdz_type']
 
-# %% ../notebooks/40_pdz-archeology.ipynb 16
+# %% ../notebooks/40_pdz-archeology.ipynb 17
 from . import file_to_bytes, get_blocks, multiparse, parse 
 import struct
 
-# %% ../notebooks/40_pdz-archeology.ipynb 17
+# %% ../notebooks/40_pdz-archeology.ipynb 18
 PDZ11_STRUCT_DICT = {
     'pdz11_8698_bytes' : {'xformat': '2s-4s-h-154s-f-192s-Z-148s', 
                     'param_keys': ['pdz-version', '??', 'NumberOfChannels', '??', 'XrayVoltageInkV', '??', 'PhotonCounts', '??']}, 
