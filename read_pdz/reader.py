@@ -4,7 +4,7 @@
 __all__ = ['PDZ_25_STRUCTURE_DICT', 'extract_spectra', 'multiparse', 'prefix', 'file_to_bytes', 'parse', 'read_strings',
            'skip_bytes', 'read_table', 'read_counts', 'get_block_at', 'get_blocks', 'get_blocktypes']
 
-# %% ../notebooks/30_parsing-bytes.ipynb 46
+# %% ../notebooks/30_parsing-bytes.ipynb 47
 import struct 
 import numpy as np 
 import os 
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pandas as pd 
 from IPython.display import display
 
-# %% ../notebooks/30_parsing-bytes.ipynb 47
+# %% ../notebooks/30_parsing-bytes.ipynb 48
 PDZ_25_STRUCTURE_DICT = {
     25:  {'xformat': 'hi-10X-i', 
           'param_keys': ['pdz_type', 'block_size', 'FileFormatString?', '??']}, 
@@ -106,6 +106,10 @@ def multiparse(xformat, arr, param_keys=None, verbose=True):
         elif 'Z' in p: 
             result, arr = read_counts(p, arr, verbose=False)
             result = [result]
+        elif 'z' in p: 
+            result, arr = read_counts(p, arr, n_channels=1028, verbose=False)
+            result = [result]    
+        
         else: 
             result, arr = parse(p, arr, verbose=False) 
             
@@ -234,7 +238,7 @@ def read_table(xformat, arr, verbose=True):
 def read_counts(xformat, arr, n_channels=2048, verbose=True): 
     '''Extract counts. '''
 
-    assert xformat == 'Z', 'Incorrect format string' 
+    assert xformat == 'Z'  or xformat == 'z', 'Incorrect format string'
 
     format = f'<{n_channels}i'
 
