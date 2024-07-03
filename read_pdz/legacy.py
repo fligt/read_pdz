@@ -3,16 +3,20 @@
 # %% auto 0
 __all__ = ['PDZ11_STRUCT_DICT', 'check_pdz_type']
 
-# %% ../notebooks/40_pdz-archeology.ipynb 17
+# %% ../notebooks/40_pdz-archeology.ipynb 16
 from . import file_to_bytes, get_blocks, multiparse, parse 
 import struct
 
-# %% ../notebooks/40_pdz-archeology.ipynb 18
+# %% ../notebooks/40_pdz-archeology.ipynb 17
 PDZ11_STRUCT_DICT = {
-    'pdz11_8698_bytes' : {'xformat': '2s-4s-h-154s-f-192s-Z-148s', 
-                    'param_keys': ['pdz-version', '??', 'NumberOfChannels', '??', 'XrayVoltageInkV', '??', 'PhotonCounts', '??']}, 
-    'pdz11_4454_bytes' : {'xformat': '2s-4s-h-154s-f-28s-z-148s', 
-                    'param_keys':  ['pdz-version', '??', 'NumberOfChannels', '??', 'XrayVoltageInkV', '??', 'PhotonCounts', '??']}
+    'pdz11_8698_bytes' : {'xformat': '2s-4s-h-34s-d-d-86s-i-i-10s-f-f-188s-Z-148s', 
+                          'param_keys': ['pdz-version', '??', 'NumberOfChannels', '??', 'LiveTimeInSeconds', 
+                                         'eVPerChannel', '??', 'RawCounts', 'ValidCounts', '??',  'XrayVoltageInkV', 
+                                         'XrayFilamentCurrentInMicroAmps', '??', 'PhotonCounts (2048 channels)', '??']}, 
+    'pdz11_4454_bytes' : {'xformat': '2s-4s-h-34s-d-d-86s-i-i-10s-f-f-24s-z-148s', 
+                          'param_keys': ['pdz-version', '??', 'NumberOfChannels', '??', 'LiveTimeInSeconds', 
+                                         'eVPerChannel', '??', 'RawCounts', 'ValidCounts', '??',  'XrayVoltageInkV', 
+                                         'XrayFilamentCurrentInMicroAmps', '??', 'PhotonCounts (1024 channels)', '??']} 
 }
 
 
