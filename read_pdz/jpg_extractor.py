@@ -37,7 +37,7 @@ def extract_jpg(pdz_file, BLOCKTYPE=137, save_file=False):
         im = np.array(Image.open(io.BytesIO(jpg))) 
 
         if save_file is True: 
-            jpg_file = re.sub('\.pdz$', '.jpg', pdz_file) 
+            jpg_file = re.sub('\\.pdz$', '.jpg', pdz_file) 
             print(f"Saving image file: '{jpg_file}'")
             plt.imsave(jpg_file, im) 
 
