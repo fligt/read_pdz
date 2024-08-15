@@ -17,13 +17,13 @@ from IPython.display import display
 PDZ_25_STRUCTURE_DICT = {
     25:  {'xformat': 'hi-10X-i', 
           'param_keys': ['pdz_type', 'block_size', 'FileFormatString?', '??']}, 
-    1:   {'xformat': 'hi-2S-6X-2S-h-S-T', 
+    1:   {'xformat': 'hi-2S-6s-2S-h-S-T', 
           'param_keys': ['block_type', 'block_size', '??', 'SerialString', '??', '??', '??', '??', '??', '??', 
                          '??', '??', '??', '??', '??', '??', '??']}, 
-    2:   {'xformat': 'hi3i8f-3S', 
+    2:   {'xformat': 'hi3i8f-*X', 
           'param_keys': ['block_type', 'block_size', '??', 'RawCounts', 'ValidCounts', '??', '??', 
                          '??', 'ActiveTimeInSeconds', 'DeadTimeInSeconds', 'ResetTimeInSeconds', 
-                         'LiveTimeInSeconds', 'TotalElapsedTimeInSeconds', '??', '??', '??']}, 
+                         'LiveTimeInSeconds', 'TotalElapsedTimeInSeconds', '??']}, 
     3:   {'xformat': 'hi-3i9f7hfhfhfhf8hfhi-S-h-Z', 
           'param_keys': ['block_type', 'block_size', '??', 'RawCounts', 'ValidCounts', 
                          '??', '??', '??', 'ActiveTimeInSeconds', 'DeadTimeInSeconds', 
@@ -198,11 +198,16 @@ def read_strings(xformat, arr, verbose=True):
 
 
 def skip_bytes(xformat, arr, verbose=True): 
-    '''Skip `n_bytes`'''
+    '''Skip a number of bytes as specified in `xformat` string. 
+    
+    If multiplier is `*` then skip all. 
+    '''
 
     # get multiplier  
     if xformat == 'X': 
         n_bytes = 1
+    elif xformat == '*X': 
+        n_bytes = len(arr)    
     else: 
         n_bytes = int(re.sub('(^\d+)X', '\g<1>', xformat))
 
