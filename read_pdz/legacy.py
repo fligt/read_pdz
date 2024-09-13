@@ -9,11 +9,11 @@ import struct
 
 # %% ../notebooks/40_pdz-archeology.ipynb 17
 PDZ11_STRUCT_DICT = {
-    'pdz11_8698_bytes' : {'xformat': '2s-4s-h-34s-d-d-86s-i-i-10s-f-f-188s-Z-148s', 
+    'pdz11_2048_channels' : {'xformat': '2X-4X-h-34X-2d-86X-2i-10X-2f-188X-Z-*X', 
                           'param_keys': ['pdz-version', '??', 'NumberOfChannels', '??', 'LiveTimeInSeconds', 
                                          'eVPerChannel', '??', 'RawCounts', 'ValidCounts', '??',  'XrayVoltageInkV', 
                                          'XrayFilamentCurrentInMicroAmps', '??', 'PhotonCounts (2048 channels)', '??']}, 
-    'pdz11_4454_bytes' : {'xformat': '2s-4s-h-34s-d-d-86s-i-i-10s-f-f-24s-z-148s', 
+    'pdz11_1024_channels' : {'xformat': '2X-4X-h-34X-2d-86X-2i-10X-2f-24X-z-*X', 
                           'param_keys': ['pdz-version', '??', 'NumberOfChannels', '??', 'LiveTimeInSeconds', 
                                          'eVPerChannel', '??', 'RawCounts', 'ValidCounts', '??',  'XrayVoltageInkV', 
                                          'XrayFilamentCurrentInMicroAmps', '??', 'PhotonCounts (1024 channels)', '??']} 
@@ -21,7 +21,7 @@ PDZ11_STRUCT_DICT = {
 
 
 def check_pdz_type(pdz_file, verbose=True): 
-    '''Read first two bytes and file size to check pdz file type.'''
+    '''Read first two bytes and for legacy pdz files number of detector channels to check pdz file type.'''
 
     pdz_bytes = file_to_bytes(pdz_file) 
     file_size = len(pdz_bytes)
@@ -30,12 +30,13 @@ def check_pdz_type(pdz_file, verbose=True):
     if first_two_bytes == 25: 
         pdz_type = 'pdz25' 
     elif first_two_bytes == 257: 
-        if file_size == 8698:
-            pdz_type = 'pdz11_8698_bytes'
-        elif file_size == 4454:
-            pdz_type = 'pdz11_4454_bytes'  
+        n_channels = struct.unpack('<h', pdz_bytes[6:8])[0] 
+        if n_channels == 1024:
+            pdz_type = 'pdz11_1024_channels'
+        elif n_channels == 2048:
+            pdz_type = 'pdz11_2048_channels'  
         else: 
-            pdz_type = f'pdz11_with_unexpected_filesize_{file_size}_bytes'
+            pdz_type = f'pdz11_with_unexpected_number_of_{n_channels}_channels'
     else:
         pdz_type = f'pdz_type_unknown:{first_two_bytes}'
                 
