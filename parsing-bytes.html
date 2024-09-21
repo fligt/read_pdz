@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Let’s bite off some bytes…">
+
+<title>About parsing pdz files – read_pdz</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./pdz-archeology.html" rel="next">
+<link href="./extracting-image-data.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="About parsing pdz files – read_pdz">
+<meta property="og:description" content="Let’s bite off some bytes…">
+<meta property="og:site_name" content="read_pdz">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">read_pdz</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/fligt/read_pdz"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./parsing-bytes.html">About parsing pdz files</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome to read_pdz</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./getting-started.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Getting started with Python</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./extracting-spectral-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Extracting spectral data from pdz files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./extracting-image-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Extracting image data from pdz files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./parsing-bytes.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">About parsing pdz files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./pdz-archeology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pdz archaeology</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#functions" id="toc-functions" class="nav-link active" data-scroll-target="#functions">FUNCTIONS</a>
+  <ul class="collapse">
+  <li><a href="#get_blocktypes" id="toc-get_blocktypes" class="nav-link" data-scroll-target="#get_blocktypes">get_blocktypes</a></li>
+  <li><a href="#get_blocks" id="toc-get_blocks" class="nav-link" data-scroll-target="#get_blocks">get_blocks</a></li>
+  <li><a href="#get_block_at" id="toc-get_block_at" class="nav-link" data-scroll-target="#get_block_at">get_block_at</a></li>
+  <li><a href="#read_counts" id="toc-read_counts" class="nav-link" data-scroll-target="#read_counts">read_counts</a></li>
+  <li><a href="#read_table" id="toc-read_table" class="nav-link" data-scroll-target="#read_table">read_table</a></li>
+  <li><a href="#skip_bytes" id="toc-skip_bytes" class="nav-link" data-scroll-target="#skip_bytes">skip_bytes</a></li>
+  <li><a href="#read_strings" id="toc-read_strings" class="nav-link" data-scroll-target="#read_strings">read_strings</a></li>
+  <li><a href="#parse" id="toc-parse" class="nav-link" data-scroll-target="#parse">parse</a></li>
+  <li><a href="#file_to_bytes" id="toc-file_to_bytes" class="nav-link" data-scroll-target="#file_to_bytes">file_to_bytes</a></li>
+  <li><a href="#prefix" id="toc-prefix" class="nav-link" data-scroll-target="#prefix">prefix</a></li>
+  <li><a href="#multiparse" id="toc-multiparse" class="nav-link" data-scroll-target="#multiparse">multiparse</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/fligt/read_pdz/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">About parsing pdz files</h1>
+</div>
+
+<div>
+  <div class="description">
+    Let’s bite off some bytes…
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<p>Bruker <code>.pdz</code> files are binary files that contain both XRF spectral data (i.e.&nbsp;photon counts) and metadata. There is no official description of the file format yet, so in order to decode the bytes we need to do some reverse engineering. This will get a rather complicated, so fasten your seat belts…</p>
+<p>To get started we need to read the pdz file into memory as a numpy array of bytes using the <code>file_to_bytes()</code> function.</p>
+<div id="328b6abc-ae34-4a6b-9972-4fac11546196" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> read_pdz <span class="im">import</span> file_to_bytes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="ec860ee1-1e1e-4674-a57e-77e4e94189e6" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pdz_file <span class="op">=</span> <span class="st">'/home/frank/Work/DATA/read-pdz-demodata/s0243V1962_XRF_28_White edge clothes underpainting (Al 38um filter).pdz'</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>pdz_bytes <span class="op">=</span> file_to_bytes(pdz_file)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">len</span>(pdz_bytes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>8690</code></pre>
+</div>
+</div>
+<p>We see that this pdz file contains 8690 bytes. Let’s take a look at the first 6 bytes…</p>
+<div id="b9b453d3-da17-4b20-bc93-c53d91f59e11" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>first_six_bytes <span class="op">=</span> pdz_bytes[<span class="dv">0</span>:<span class="dv">6</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>first_six_bytes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>array([b'\x19', b'', b'\x0e', b'', b'', b''], dtype='|S1')</code></pre>
+</div>
+</div>
+<p>The standard Python library for decoding bytes is <a href="https://docs.python.org/3/library/struct.html">struct</a>. In order to decode a sequence of bytes you can use the <code>struct.unpack()</code> function. As a first argument you need to supply a so-called format string. This is essentially a recipe that explains which bytes belong together and how to interpret the byte values of each group.</p>
+<p>We happen to know that the byte order in pdz files is <em>Little-Endian</em>. This is indicated with the <code>'&lt;'</code> character. Next thing we know is that the first two bytes belong together and represent a ‘short’ integer value. This is indicated with the character <code>'h'</code>. The next group of four bytes represents an integer. This is indicated with the character <code>'i'</code>. For more detail on format characters see: <a href="https://docs.python.org/3/library/struct.html#format-characters">format-characters</a>.</p>
+<p>Armed with our format string <code>'&lt;hi'</code> we are now ready to decode our first six bytes:</p>
+<div id="48af6051-15d9-4ea9-9c1e-fb6c1534b4b6" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> struct</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="44da33ae-cedc-4059-ab8d-9c808be99d25" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>struct.unpack(<span class="st">'&lt;hi'</span>, first_six_bytes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>(25, 14)</code></pre>
+</div>
+</div>
+<p>Unfortunately the standard <code>struct.unpack()</code> function is not sufficient to decode pdz files. The reason for this is that Bruker pdz files contain different types of <em>variable byte length</em> segments that require more advanced decoding. An example of such a contraption is a variable length character string. The first four bytes of such a segment contain an integer value that represents the number of two byte characters following that belong to that string. Parsing such a string is then a two-step process. First read the size <code>n</code> of the string, and then read <code>2n</code> bytes that contain the actual string characters. Another example of a variable byte length construct is the division of a pdz file into blocks. Here again we need to read an integer value to decide how many following bytes belong the block. So far we have discovered three types of variable byte length constructs that are being used in pdz files: <em>file blocks</em>, <em>strings</em> and <em>tables</em>.</p>
+<p>An essential a first step in parsing a pdz file is a separation into it’s consecutive file blocks. This can be done by applying the <code>get_blocks()</code> function to the <code>pdz_bytes</code> array.</p>
+<div id="ae989345-f451-448e-8135-610541d3de78" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> read_pdz <span class="im">import</span> get_blocks</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="44f253ab-f469-4471-9644-258a6aed7904" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>block_list <span class="op">=</span> get_blocks(pdz_bytes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Detecting block sequence...
+Ok!</code></pre>
+</div>
+</div>
+<p>Let’s take a look at our <code>block_list</code> variable. Note that for long arrays not all values are printed…</p>
+<div id="5c144a5b-8ab9-4218-b506-5959a6b5acf8" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>block_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>[{'block_type': 25,
+  'block_size': 14,
+  'start': 0,
+  'stop': 20,
+  'file_size': 8690,
+  'bytes': array([b'\x19', b'', b'\x0e', b'', b'', b'', b'p', b'', b'd', b'', b'z',
+         b'', b'2', b'', b'5', b'', b'\x01', b'', b'', b''], dtype='|S1')},
+ {'block_type': 1,
+  'block_size': 228,
+  'start': 20,
+  'stop': 254,
+  'file_size': 8690,
+  'bytes': array([b'\x01', b'', b'\xe4', b'', b'', b'', b'\x08', b'', b'', b'', b'9',
+         b'', b'0', b'', b'0', b'', b'F', b'', b'4', b'', b'9', b'', b'6',
+         b'', b'9', b'', b'\x08', b'', b'', b'', b'S', b'', b'K', b'', b'5',
+         b'', b'-', b'', b'4', b'', b'9', b'', b'6', b'', b'9', b'', b'-',
+         b'-', b'-', b'A', b'}', b'', b'\x06', b'', b'', b'', b'A', b'',
+         b'm', b'', b'p', b'', b't', b'', b'e', b'', b'k', b'', b'\x04',
+         b'', b'', b'', b'R', b'', b'x', b'', b'B', b'', b'x', b'', b'\x03',
+         b'\x08', b'\x07', b'', b'', b'', b'M', b'', b'o', b'', b'v', b'',
+         b'a', b'', b'b', b'', b'l', b'', b'e', b'', b'\x08', b'', b'', b'',
+         b'\x01', b'', b'\t', b'', b'', b'', b'8', b'', b'.', b'', b'0',
+         b'', b'.', b'', b'0', b'', b'.', b'', b'4', b'', b'4', b'', b'6',
+         b'', b'\x02', b'', b'\x06', b'', b'', b'', b'2', b'', b'0', b'',
+         b'0', b'', b'.', b'', b'3', b'', b'9', b'', b'\x03', b'', b'\x04',
+         b'', b'', b'', b'6', b'', b'.', b'', b'0', b'', b'3', b'', b'\x04',
+         b'', b'\x04', b'', b'', b'', b'3', b'', b'.', b'', b'0', b'', b'3',
+         b'', b'\x05', b'', b'\x04', b'', b'', b'', b'9', b'', b'.', b'',
+         b'2', b'', b'F', b'', b'\x06', b'', b'\x06', b'', b'', b'', b'2',
+         b'', b'0', b'', b'0', b'', b'.', b'', b'3', b'', b'9', b'',
+         b'\x07', b'', b'\x04', b'', b'', b'', b'1', b'', b'.', b'', b'1',
+         b'', b'1', b'', b'\x08', b'', b'\x04', b'', b'', b'', b'1', b'',
+         b'.', b'', b'0', b'', b'1', b''], dtype='|S1')},
+ {'block_type': 2,
+  'block_size': 92,
+  'start': 254,
+  'stop': 352,
+  'file_size': 8690,
+  'bytes': array([b'\x02', b'', b'\\', b'', b'', b'', b'\x01', b'', b'', b'',
+         b'\xaa', b'4', b'|', b'', b'\x16', b'\xee', b'K', b'', b'', b'',
+         b'', b'', b'', b'', b'', b'', b'x', b'\x94', b']', b'B', b'\xe4',
+         b'%', b']', b'B', b'\xd8', b'\xa3', b'\x86', b'A', b'\xd3',
+         b'\xcc', b'^', b'A', b'\x8a', b'A', b'\xc4', b'A', b'{', b'\x8e',
+         b'\xe1', b'B', b'\x05', b'', b'', b'', b'A', b'', b'r', b'', b't',
+         b'', b'a', b'', b'x', b'', b'\t', b'', b'', b'', b'8', b'', b'.',
+         b'', b'0', b'', b'.', b'', b'0', b'', b'.', b'', b'4', b'', b'4',
+         b'', b'6', b'', b'\x04', b'', b'', b'', b't', b'', b'e', b'', b's',
+         b'', b't', b''], dtype='|S1')},
+ {'block_type': 3,
+  'block_size': 8332,
+  'start': 352,
+  'stop': 8690,
+  'file_size': 8690,
+  'bytes': array([b'\x03', b'', b'\x8c', ..., b'', b'', b''], dtype='|S1')}]</code></pre>
+</div>
+</div>
+<p>The example pdz file here contains exactly four consecutive blocks of bytes. Within each block the first two bytes of contain a (short) integer value that indicates the type of block, while the second four bytes contain an integer value that describes the length of that block. The first two bytes of the first block contain an integer value <code>25</code>. This indicates that the pdz format is 25. The next blocks are of type <code>1</code>, <code>2</code> and <code>3</code>. Block types <code>1</code> and <code>2</code> contain various instrument metadata, while block type <code>3</code> contains the actual spectral data. According to our local XRF guru Luc Megens a pdz file can contain multiple XRF spectra in separate type 3 blocks. Furthermore pdz files can contain type <code>4</code>, <code>5</code> and <code>6</code> blocks. For now we will ignore these…</p>
+<p>To enable the parsing of variable length strings and tables I created an <em>extended format string syntax</em> that besides standard struct format characters includes a capital <code>'S'</code> and <code>'T'</code> for strings and tables, and <code>'X'</code> for skipping bytes. Both <code>'S'</code> and <code>'X'</code> can be prefixed with and integer multiplier that indicates how many strings and bytes need to be parsed. For example <code>3X</code> will skip 3 bytes. If you need to skip an unknown amount of bytes at the end of an array you can put a wildcard <code>*X</code> multiplier at the end of the xformat string. These additional characters need to be separated from standard struct format strings with dashes <code>'-'</code>. Another important extension of the syntax is <code>'Z'</code>. This indicates at which position the actual spectral data of 2048 photon counts should be read.</p>
+<p>To read the information that is hidden in the bytes array of a block we can now apply the function <code>multiparse()</code>. This function needs as required arguments an <em>extended syntax format string</em> <code>xformat</code> and an array of bytes <code>arr</code>. The xformat string functions as a recipe to decode the bytes array. The <code>xformat</code> strings for decoding block types <code>25</code>, <code>1</code>, <code>2</code> and <code>3</code> are stored in the <code>PDZ_25_STRUCTURE_DICT</code> dictionary. Also included for each block is a <code>param_keys</code> list with our interpretation of the parsed values based on a comparison with other exports from Bruker software. In cases where we could not find out we put question marks.</p>
+<div id="b4956455-d40c-470d-8c86-bda9c18fa531" class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> read_pdz <span class="im">import</span> multiparse, PDZ_25_STRUCTURE_DICT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Before parsing the bytes from the file blocks it is informative to take look at the <code>PDZ_25_STRUCTURE_DICT</code> dictionary. This provides a complete specification of the pdz file format.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>PDZ_25_STRUCTURE_DICT <span class="op">=</span> {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dv">25</span>:  {<span class="st">'xformat'</span>: <span class="st">'hi-10X-i'</span>, </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">'param_keys'</span>: [<span class="st">'pdz_type'</span>, <span class="st">'block_size'</span>, <span class="st">'FileFormatString?'</span>, <span class="st">'??'</span>]}, </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>:   {<span class="st">'xformat'</span>: <span class="st">'hi-2S-6X-2S-h-S-T'</span>, </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">'param_keys'</span>: [<span class="st">'block_type'</span>, <span class="st">'block_size'</span>, <span class="st">'??'</span>, <span class="st">'SerialString'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>]}, </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span>:   {<span class="st">'xformat'</span>: <span class="st">'hi3i8f-*X'</span>, </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">'param_keys'</span>: [<span class="st">'block_type'</span>, <span class="st">'block_size'</span>, <span class="st">'??'</span>, <span class="st">'RawCounts'</span>, <span class="st">'ValidCounts'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, </span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'??'</span>, <span class="st">'ActiveTimeInSeconds'</span>, <span class="st">'DeadTimeInSeconds'</span>, <span class="st">'ResetTimeInSeconds'</span>, </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'LiveTimeInSeconds'</span>, <span class="st">'TotalElapsedTimeInSeconds'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>]}, </span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3</span>:   {<span class="st">'xformat'</span>: <span class="st">'hi-3i9f7hfhfhfhf8hfhi-S-h-Z'</span>, </span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>          <span class="st">'param_keys'</span>: [<span class="st">'block_type'</span>, <span class="st">'block_size'</span>, <span class="st">'??'</span>, <span class="st">'RawCounts'</span>, <span class="st">'ValidCounts'</span>, </span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'ActiveTimeInSeconds'</span>, <span class="st">'DeadTimeInSeconds'</span>, </span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'ResetTimeInSeconds'</span>, <span class="st">'LiveTimeInSeconds'</span>, <span class="st">'XrayVoltageInkV'</span>, <span class="st">'XrayFilamentCurrentInMicroAmps'</span>, </span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'Filter1ElementAtomicNum'</span>, <span class="st">'Filter1Thickness'</span>, <span class="st">'Filter2ElementAtomicNum'</span>, <span class="st">'Filter2Thickness'</span>, </span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'Filter3ElementAtomicNum'</span>, <span class="st">'Filter3Thickness'</span>, <span class="st">'??'</span>, <span class="st">'DetectorTempInC'</span>, <span class="st">'??'</span>, </span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'??'</span>, <span class="st">'??'</span>, <span class="st">'eVPerChannel'</span>, <span class="st">'??'</span>, <span class="st">'eVStart'</span>, </span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'Year'</span>, <span class="st">'Month'</span>, <span class="st">'AM/PM code?'</span>, <span class="st">'Day'</span>, <span class="st">'Hour'</span>, <span class="st">'Minutes'</span>, <span class="st">'Seconds'</span>, </span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'??'</span>, <span class="st">'NosePressureInMilliBars'</span>, <span class="st">'NumberOfChannels'</span>, <span class="st">'NoseTemperatureInC'</span>, </span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>                         <span class="st">'TubeSpec?'</span>, <span class="st">'??'</span>, <span class="st">'2048 counts'</span>]}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>With this pdz file format specification we can decode the four blocks in the pdz file one by one. Let’s parse the bytes of first block (type 25) of the pdz file with the corresponding <code>xformat</code> string and <code>param_keys</code> list.</p>
+<div id="e89f7fb4-b10a-4b09-8d99-065badf347df" class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>xformat <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">25</span>][<span class="st">'xformat'</span>]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>param_keys <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">25</span>][<span class="st">'param_keys'</span>]</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>xformat, param_keys</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>('hi-10X-i', ['pdz_type', 'block_size', 'FileFormatString?', '??'])</code></pre>
+</div>
+</div>
+<p>The recipe for reading this first file block is quite short: <code>h</code>: read a two byte integer, <code>i</code>: read a four byte integer, <code>10X</code>: skip ten bytes, <code>i</code>: read another four byte integer.</p>
+<div id="9de6fcd5-ede2-4031-8e5e-f672154af32f" class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>b0 <span class="op">=</span> block_list[<span class="dv">0</span>][<span class="st">'bytes'</span>]</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>multiparse(xformat, b0)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>25</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>14</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>b'pdz25'</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>The <code>multiparse()</code> function can be given an optional third argument that is a list with the interpretation of each value.</p>
+<div id="5651671b-87ed-416c-a7e2-be4fdd52fada" class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>multiparse(xformat, b0, param_keys<span class="op">=</span>param_keys)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">values</th>
+<th data-quarto-table-cell-role="th">param_keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>25</td>
+<td>pdz_type</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>14</td>
+<td>block_size</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>b'pdz25'</td>
+<td>FileFormatString?</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>1</td>
+<td>??</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Next we read the second block…</p>
+<div id="a0e6d67f-c260-4df1-a507-1b073136348f" class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>b1 <span class="op">=</span> block_list[<span class="dv">1</span>][<span class="st">'bytes'</span>]</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>xformat <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">1</span>][<span class="st">'xformat'</span>]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>param_keys <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">1</span>][<span class="st">'param_keys'</span>] </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>xformat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>'hi-2S-6s-2S-h-S-T'</code></pre>
+</div>
+</div>
+<div id="3e286f6b-9804-4fe7-9327-180aec35c7d7" class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>multiparse(xformat, b1, param_keys<span class="op">=</span>param_keys)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">values</th>
+<th data-quarto-table-cell-role="th">param_keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1</td>
+<td>block_type</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>228</td>
+<td>block_size</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>900F4969</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>SK5-4969</td>
+<td>SerialString</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>b'---A}\x00'</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>Amptek</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>RxBx</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>2051</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>Movable</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>[#1, 8.0.0.446]</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>[#2, 200.39]</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>[#3, 6.03]</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>[#4, 3.03]</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>[#5, 9.2F]</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>[#6, 200.39]</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>[#7, 1.11]</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>[#8, 1.01]</td>
+<td>??</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>This file block (type 1) contains values that seem to indicate serial numbers and probably software versions. Not sure how useful this information is for us. Let’s read the next block.</p>
+<div id="d6fe687d-5f21-40c9-bbde-9623c83c2beb" class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>b2 <span class="op">=</span> block_list[<span class="dv">2</span>][<span class="st">'bytes'</span>]</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>xformat <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">2</span>][<span class="st">'xformat'</span>]</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>param_keys <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">2</span>][<span class="st">'param_keys'</span>] </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>xformat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>'hi3i8f-*X'</code></pre>
+</div>
+</div>
+<div id="f0b3661b-b900-4b3d-a335-4721ba29e7f1" class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>multiparse(xformat, b2, param_keys<span class="op">=</span>param_keys)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">values</th>
+<th data-quarto-table-cell-role="th">param_keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>2</td>
+<td>block_type</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>92</td>
+<td>block_size</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>8139946</td>
+<td>RawCounts</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>4976150</td>
+<td>ValidCounts</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>0.0</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>0.0</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>55.394989</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>55.287003</td>
+<td>ActiveTimeInSeconds</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>16.830002</td>
+<td>DeadTimeInSeconds</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>13.925006</td>
+<td>ResetTimeInSeconds</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>24.532001</td>
+<td>LiveTimeInSeconds</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>112.778282</td>
+<td>TotalElapsedTimeInSeconds</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>b'\x05Artax\t8.0.0.446\x04test'</td>
+<td>??</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>File block <code>2</code> primarily contains instrumental data about measurement times and detector counts.</p>
+<p>Finally we parse file block type <code>3</code>. This block contains two parts. The first part contains spectral parameters, while the second part contains the actual spectral data (i.e.&nbsp;photon counts consisting of 2048 four byte integers.</p>
+<div id="fc1c4bff-da1c-4448-9ce1-bce59e2b6b93" class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>b3 <span class="op">=</span> block_list[<span class="dv">3</span>][<span class="st">'bytes'</span>]</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>b3_part1 <span class="op">=</span> b3[<span class="dv">0</span>:<span class="op">-</span><span class="dv">2054</span>] <span class="co"># spectral parameters</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>b3_part2 <span class="op">=</span> b3[<span class="op">-</span><span class="dv">2054</span>:] <span class="co"># counts </span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>xformat <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">3</span>][<span class="st">'xformat'</span>]</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>param_keys <span class="op">=</span> PDZ_25_STRUCTURE_DICT[<span class="dv">3</span>][<span class="st">'param_keys'</span>] </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>xformat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>'hi-3i9f7hfhfhfhf8hfhi-*Z'</code></pre>
+</div>
+</div>
+<div id="d38a5b21-8a4f-4191-8f39-9e8ec4312191" class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>values,  arr <span class="op">=</span> multiparse(xformat, b3, param_keys<span class="op">=</span>param_keys)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">values</th>
+<th data-quarto-table-cell-role="th">param_keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>3</td>
+<td>block_type</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>8332</td>
+<td>block_size</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>8139946</td>
+<td>RawCounts</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>4976150</td>
+<td>ValidCounts</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>0.0</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>0.0</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>55.394989</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>55.287003</td>
+<td>ActiveTimeInSeconds</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>16.830002</td>
+<td>DeadTimeInSeconds</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>13.925006</td>
+<td>ResetTimeInSeconds</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>24.532001</td>
+<td>LiveTimeInSeconds</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>40.0</td>
+<td>XrayVoltageInkV</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>8.0</td>
+<td>XrayFilamentCurrentInMicroAmps</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>13</td>
+<td>Filter1ElementAtomicNum</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>38</td>
+<td>Filter1Thickness</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>0</td>
+<td>Filter2ElementAtomicNum</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">17</td>
+<td>0</td>
+<td>Filter2Thickness</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">18</td>
+<td>0</td>
+<td>Filter3ElementAtomicNum</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">19</td>
+<td>0</td>
+<td>Filter3Thickness</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">20</td>
+<td>5</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">21</td>
+<td>37.5</td>
+<td>DetectorTempInC</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">22</td>
+<td>0</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">23</td>
+<td>0.0</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">24</td>
+<td>0</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">25</td>
+<td>20.0</td>
+<td>eVPerChannel</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">26</td>
+<td>2</td>
+<td>??</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">27</td>
+<td>2.356571</td>
+<td>eVStart</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">28</td>
+<td>2022</td>
+<td>Year</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">29</td>
+<td>8</td>
+<td>Month</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">30</td>
+<td>2</td>
+<td>AM/PM code?</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">31</td>
+<td>23</td>
+<td>Day</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">32</td>
+<td>11</td>
+<td>Hour</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">33</td>
+<td>54</td>
+<td>Minutes</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">34</td>
+<td>32</td>
+<td>Seconds</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">35</td>
+<td>320</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">36</td>
+<td>1017.0</td>
+<td>NosePressureInMilliBars</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">37</td>
+<td>2048</td>
+<td>NumberOfChannels</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">38</td>
+<td>38</td>
+<td>NoseTemperatureInC</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">39</td>
+<td>[b'\x0cRoHS 50 Hi-Z\x01']</td>
+<td>??</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">40</td>
+<td>[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, ...</td>
+<td>Intensity_2048_channels</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>We can see in the table above that the last row contains an array of 2048 integers with photon counts. This array can accessed by indexing the last element of the returned <code>values</code> list like so:</p>
+<div id="3b9e95d8-f832-4de5-9be4-ae556ab65d60" class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>values[<span class="op">-</span><span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>array([0, 0, 0, ..., 2, 2, 3])</code></pre>
+</div>
+</div>
+<p>The energy calibration for the individual 2048 detector channels is not stored in the pdz file but can be calculated from two spectral parameters: <code>eVPerChannel</code> and <code>eVStart</code>. This is done automatically for you in the <code>extract_spectra()</code> function as explained in the previous section. If you want to save the spectral data to a .csv file then set the option <code>to_csv=True</code>.</p>
+<div id="c748883b-54a4-4f15-a461-bbcabe0d0f0a" class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> read_pdz <span class="im">import</span> extract_spectrum</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="01b3b7a4-2022-4301-82d3-f623c604efcc" class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> extract_spectrum(pdz_file, to_csv<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Saving spectral data to: /home/frank/Work/DATA/read-pdz-demodata/s0243V1962_XRF_28_White edge clothes underpainting (Al 38um filter).pdz.csv</code></pre>
+</div>
+</div>
+<div id="4cf5e3b3-9c8e-4ac1-a2e2-5886bc042eb1" class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> df.plot()</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Energy (keV)'</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Intensity (counts'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="30_parsing-bytes_files/figure-html/cell-23-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">FUNCTIONS</h2>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L289" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="get_blocktypes" class="level3">
+<h3 class="anchored" data-anchor-id="get_blocktypes">get_blocktypes</h3>
+<blockquote class="blockquote">
+<pre><code> get_blocktypes (block_list)</code></pre>
+</blockquote>
+<p><em>Extract <code>block_types</code> list from <code>block_list</code>.</em></p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L263" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="get_blocks" class="level3">
+<h3 class="anchored" data-anchor-id="get_blocks">get_blocks</h3>
+<blockquote class="blockquote">
+<pre><code> get_blocks (pdz_bytes, verbose=True)</code></pre>
+</blockquote>
+<p><em>Parse <code>pdz_byte_array</code> into consequtive blocks.</em></p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L240" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="get_block_at" class="level3">
+<h3 class="anchored" data-anchor-id="get_block_at">get_block_at</h3>
+<blockquote class="blockquote">
+<pre><code> get_block_at (pdz_arr, start)</code></pre>
+</blockquote>
+<p>*Read first data block from bytes array <code>pdz_arr</code> from index position <code>start</code>.</p>
+<p>Assumes that first 4 bytes are (block type and size)</p>
+<p>Returns: <code>block_dict</code>, <code>block</code>*</p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L218" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="read_counts" class="level3">
+<h3 class="anchored" data-anchor-id="read_counts">read_counts</h3>
+<blockquote class="blockquote">
+<pre><code> read_counts (xformat, arr, verbose=True)</code></pre>
+</blockquote>
+<p><em>Extract counts.</em></p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L199" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="read_table" class="level3">
+<h3 class="anchored" data-anchor-id="read_table">read_table</h3>
+<blockquote class="blockquote">
+<pre><code> read_table (xformat, arr, verbose=True)</code></pre>
+</blockquote>
+<p><em>Extract numbered table</em></p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L175" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="skip_bytes" class="level3">
+<h3 class="anchored" data-anchor-id="skip_bytes">skip_bytes</h3>
+<blockquote class="blockquote">
+<pre><code> skip_bytes (xformat, arr, verbose=True)</code></pre>
+</blockquote>
+<p>*Skip a number of bytes as specified in <code>xformat</code> string.</p>
+<p>If multiplier is <code>*</code> then skip all.*</p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L145" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="read_strings" class="level3">
+<h3 class="anchored" data-anchor-id="read_strings">read_strings</h3>
+<blockquote class="blockquote">
+<pre><code> read_strings (xformat, arr, verbose=True)</code></pre>
+</blockquote>
+<p><em>Parse <code>n</code> variable length character strings preceded by a length integer.</em></p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L125" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="parse" class="level3">
+<h3 class="anchored" data-anchor-id="parse">parse</h3>
+<blockquote class="blockquote">
+<pre><code> parse (format, arr, verbose=True)</code></pre>
+</blockquote>
+<p>*Parse first bytes from bytes array <code>arr</code> into human readable text according to <code>format</code> string.</p>
+<p>See struct library for format string specification. For example, ‘&lt;ff’ would result the first 8 bytes to be converted into two Little-Endian floats.</p>
+<p>Returns: <code>parsed</code> list and remaining bytes array of <code>tail_arr</code> unprocessed <code>values</code>.*</p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L110" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="file_to_bytes" class="level3">
+<h3 class="anchored" data-anchor-id="file_to_bytes">file_to_bytes</h3>
+<blockquote class="blockquote">
+<pre><code> file_to_bytes (pdz_file)</code></pre>
+</blockquote>
+<p>*Read all bytes from filepath <code>pdz_file</code> into a byte array.</p>
+<p>Returns: <code>pdz_arr</code> (numpy array of bytes)*</p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L102" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="prefix" class="level3">
+<h3 class="anchored" data-anchor-id="prefix">prefix</h3>
+<blockquote class="blockquote">
+<pre><code> prefix (format)</code></pre>
+</blockquote>
+<p><em>Prefix little endian byte order (&lt;) to struct type format string if missing.</em></p>
+<hr>
+<p><a href="https://github.com/fligt/read_pdz/blob/master/read_pdz/reader.py#L43" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="multiparse" class="level3">
+<h3 class="anchored" data-anchor-id="multiparse">multiparse</h3>
+<blockquote class="blockquote">
+<pre><code> multiparse (xformat, arr, param_keys=None, verbose=True)</code></pre>
+</blockquote>
+<p><em>Parse segments in extendend format string <code>xformat</code> e.g.&nbsp;‘&lt;i5f-2S-T-3S-S-f’</em></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/fligt\.github\.io\/read_pdz");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./extracting-image-data.html" class="pagination-link" aria-label="Extracting image data from pdz files">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Extracting image data from pdz files</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./pdz-archeology.html" class="pagination-link" aria-label="Pdz archaeology">
+        <span class="nav-page-text">Pdz archaeology</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>2023 Rijkserfgoedlaboratorium Amsterdam</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/fligt/read_pdz/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
